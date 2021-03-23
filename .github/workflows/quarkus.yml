@@ -7,14 +7,16 @@ on:
   pull_request:
     paths:
       - '.github/workflows/quarkus.yml'
-  schedule:
-  - cron: '0 3 * * *'
   workflow_dispatch:
     inputs:
-      name:
-        description: 'Person to greet'
-        required: false
-        default: 'Mona the Octocat'
+      graal:
+        description: 'GraalVM branch or tag'
+        required: true
+        default: 'master'
+      quarkus:
+        description: 'Quarkus branch or tag'
+        required: true
+        default: 'main'
 
 env:
   # Workaround testsuite locale issue
@@ -38,17 +40,17 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        repository: oracle/graal
-        fetch-depth: 1
-    - uses: actions/checkout@v2
-      with:
         repository: graalvm/mx.git
         fetch-depth: 1
         ref: master
         path: ${{ env.MX_PATH }}
-    - name: Get latest quarkus
+    - name: Get GraalVM
       run: |
-        curl --output quarkus.tgz -sL https://api.github.com/repos/quarkusio/quarkus/tarball/main
+        curl --output graalvm.tgz -sL https://api.github.com/repos/oracle/graal/tarball/${{ github.event.inputs.graal }}
+        tar xf graalvm.tgz --strip-components=1
+    - name: Get quarkus
+      run: |
+        curl --output quarkus.tgz -sL https://api.github.com/repos/quarkusio/quarkus/tarball/${{ github.event.inputs.quarkus }}
         mkdir ${QUARKUS_PATH}
         tar xf quarkus.tgz -C ${QUARKUS_PATH} --strip-components=1
     - uses: actions/cache@v1
@@ -119,9 +121,9 @@ jobs:
       - name: Extract GraalVM build
         shell: bash
         run: tar -xzvf graalvm.tgz -C $(dirname ${GRAALVM_HOME})
-      - name: Get latest quarkus release
+      - name: Get quarkus
         run: |
-          curl --output quarkus.tgz -sL https://api.github.com/repos/quarkusio/quarkus/tarball/main
+          curl --output quarkus.tgz -sL https://api.github.com/repos/quarkusio/quarkus/tarball/${{ github.event.inputs.quarkus }}
           mkdir ${QUARKUS_PATH}
           tar xf quarkus.tgz -C ${QUARKUS_PATH} --strip-components=1
       - name: Reclaim Disk Space
