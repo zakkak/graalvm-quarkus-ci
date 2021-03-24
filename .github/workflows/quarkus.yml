@@ -9,12 +9,20 @@ on:
       - '.github/workflows/quarkus.yml'
   workflow_dispatch:
     inputs:
-      graal:
-        description: 'GraalVM branch or tag'
+      graal-repo:
+        description: 'GraalVM repository'
+        required: true
+        default: 'oracle/graal'
+      graal-version:
+        description: 'GraalVM branch, tag, or commit'
         required: true
         default: 'master'
-      quarkus:
-        description: 'Quarkus branch or tag'
+      quarkus-repo:
+        description: 'Quarkus repository'
+        required: true
+        default: 'quarkusio/quarkus'
+      quarkus-version:
+        description: 'Quarkus branch, tag, or commit'
         required: true
         default: 'main'
 
@@ -46,11 +54,11 @@ jobs:
         path: ${{ env.MX_PATH }}
     - name: Get GraalVM
       run: |
-        curl --output graalvm.tgz -sL https://api.github.com/repos/oracle/graal/tarball/${{ github.event.inputs.graal }}
+        curl --output graalvm.tgz -sL "https://api.github.com/repos/${{ github.event.inputs.graal-repo }}/tarball/${{ github.event.inputs.graal-version }}"
         tar xf graalvm.tgz --strip-components=1
     - name: Get quarkus
       run: |
-        curl --output quarkus.tgz -sL https://api.github.com/repos/quarkusio/quarkus/tarball/${{ github.event.inputs.quarkus }}
+        curl --output quarkus.tgz -sL "https://api.github.com/repos/${{ github.event.inputs.quarkus-repo }}/tarball/${{ github.event.inputs.quarkus-version }}"
         mkdir ${QUARKUS_PATH}
         tar xf quarkus.tgz -C ${QUARKUS_PATH} --strip-components=1
     - uses: actions/cache@v1
@@ -123,7 +131,7 @@ jobs:
         run: tar -xzvf graalvm.tgz -C $(dirname ${GRAALVM_HOME})
       - name: Get quarkus
         run: |
-          curl --output quarkus.tgz -sL https://api.github.com/repos/quarkusio/quarkus/tarball/${{ github.event.inputs.quarkus }}
+          curl --output quarkus.tgz -sL "https://api.github.com/repos/${{ github.event.inputs.quarkus-repo }}/tarball/${{ github.event.inputs.quarkus-version }}"
           mkdir ${QUARKUS_PATH}
           tar xf quarkus.tgz -C ${QUARKUS_PATH} --strip-components=1
       - name: Reclaim Disk Space
